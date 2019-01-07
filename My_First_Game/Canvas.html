@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <link rel="stylesheet" href="css/main.css">
+  </head>
+  <body >
+    <div class="main">
+      <canvas id="main" width="800" height="500" style="border:1px solid black;"></canvas>
+    </div>
+    <div class="Player">
+      <canvas id="Player" width="800" height="500" style="border:1px solid black;"></canvas>
+    </div>
+    <div class="Enemy">
+      <canvas id="Enemy" width="800" height="500" style="border:1px solid black;"></canvas>
+    </div>
+
+    <div id="Status" class="Status_Box">
+    </div>
+    <div id="Score" class="Score">
+    </div>
+  </body>
+</html>
+
+
+<script type="text/javascript">
+  var Width = 800;
+  var Height = 500;
+  var main_Canvas = document.getElementById('main').getContext('2d');
+  var Player_Canvas = document.getElementById('Player').getContext('2d');
+  var Enemy_Canvas = document.getElementById('Enemy').getContext('2d');
+  var Start_point = {x:0 , y:399}
+  var Character = {Name:"Player",Color:"#FE0000",Mov_Spd:4.5,x:Start_point.x,y:Start_point.y,Size_x:40,Size_y:50,Jump_power:20}
+  var Enemy_1 = {Name:"Enemy_1",Color:"#000000",Mov_Spd:0.25,x:Start_point.x+Width-40,y:Start_point.y,Size_x:40,Size_y:50,Jump_power:20}
+  var LIFE_Point = 3;
+  var Score = 0;
+  function FillGrass()
+  {
+    main_Canvas.fillStyle = "#67E803";
+    main_Canvas.fillRect(0,450,800,50);
+  }
+  function Create_Character()
+  {
+    Player_Canvas.fillStyle = Character.Color;
+    Player_Canvas.fillRect(Start_point.x,Start_point.y,Character.Size_x,Character.Size_y);
+    Player_Canvas.fillStyle = "#000000";
+    Player_Canvas.fillText('P',15,430);
+  }
+  function Create_Enemy()
+  {
+    Enemy_Canvas.fillStyle = Enemy_1.Color;
+    Enemy_Canvas.fillRect(Enemy_1.x,Enemy_1.y,Character.Size_x,Character.Size_y);
+    Enemy_Canvas.fillStyle = "#000000";
+    Enemy_Canvas.fillText('E',15,430);
+  }
+  function Move(direction,object)
+  {
+      Player_Canvas.clearRect(0,0,Width,Height);
+      Player_Canvas.fillStyle = object.Color;
+      var Object_position_x = object.x;
+      if (direction == "Right")
+      {
+        if (object.x <= Width-object.Size_x)
+        {
+          Object_position_x += object.Mov_Spd;
+          document.getElementById('Status').innerHTML = "";
+        }
+        else
+        {
+          document.getElementById('Status').innerHTML = "Limited Area.";
+        }
+      } else if (direction == "Left")
+      {
+        if (object.x > 0)
+        {
+          Object_position_x -= object.Mov_Spd;
+          document.getElementById('Status').innerHTML = "";
+        }
+        else
+        {
+          document.getElementById('Status').innerHTML = "Limited Area.";
+        }
+      }
+      Player_Canvas.fillRect(Object_position_x,object.y,object.Size_x,object.Size_y);
+      object.x = Object_position_x;
+  }
+  function Jump(object)
+  {
+    if (object.y == Start_point.y)
+    {
+      Player_Canvas.fillStyle = object.Color;
+      var Object_position_y = object.y;
+      for (var i = 1; i <= object.Jump_power; i++)
+      {
+        (function (i)
+        {
+          setTimeout(function () {
+            Player_Canvas.clearRect(0,0,Width,Height);
+            Object_position_y -= i
+            object.y = Object_position_y;
+            Player_Canvas.fillRect(object.x,object.y,object.Size_x,object.Size_y);
+          }, 20*i);
+        })(i);
+      };
+      for (var j = 1; j <= object.Jump_power; j++)
+      {
+        (function (j)
+        {
+          setTimeout(function () {
+            Player_Canvas.clearRect(0,0,Width,Height);
+            Object_position_y += j
+            object.y = Object_position_y;
+            Player_Canvas.fillRect(object.x,object.y,object.Size_x,object.Size_y);
+          }, 50*j);
+        })(j);
+      };
+    }
+  }
+  function Enemy_move (object)
+  {
+    setInterval( function(){
+      Enemy_Canvas.clearRect(0,0,Width,Height);
+      Enemy_Canvas.fillStyle = object.Color;
+      targetX = Character.x ;
+      targetY = Character.y ;
+      var Object_position_x = object.x ;
+      var Object_position_y = object.y ;
+      if (object.x >= targetX)
+      {
+        Object_position_x -= object.Mov_Spd ;
+        Enemy_Canvas.fillRect(Object_position_x,object.y,object.Size_x,object.Size_y);
+        object.x = Object_position_x ;
+      }
+      else if (object.x <= targetX)
+      {
+        Object_position_x += object.Mov_Spd ;
+        Enemy_Canvas.fillRect(Object_position_x,object.y,object.Size_x,object.Size_y);
+        object.x = Object_position_x ;
+      }
+      if ((targetX == object.x||object.x == targetX-Character.Size_x||object.x == targetX+Character.Size_x) && (object.y == targetY) && (LIFE_Point !== 0))
+      {
+        LIFE_Point -= 1 ;
+        Player_Canvas.clearRect(0,0,Width,Height);
+        Create_Character();
+        Character.x = Start_point.x ;
+        Character.y = Start_point.y ;
+      }
+    },1);
+  }
+  function Score_get()
+  {
+    setInterval( function()
+    {
+      if (LIFE_Point != 0)
+      {
+          Score+=1 ;
+      }
+    document.getElementById('Score').innerHTML = "Score : " + Score;
+    },1);
+  }
+  var keys = {
+      length: 0
+  };
+
+  document.onkeydown = function(e) {
+      if (!keys[e.keyCode]) {
+          keys[e.keyCode] = true;
+          keys.length++;
+      }
+      if(keys[68])
+      {
+        Move("Right",Character);
+      }
+      if (keys[87]) {
+        Jump(Character);
+      }
+      if (keys[87]&&keys[68]) {
+        Move("Right",Character);
+        Jump(Character);
+      }
+      if(keys[65])
+      {
+        Move("Left",Character);
+      }
+      if (keys[65]&&keys[87]) {
+        Move("Left",Character);
+        Jump(Character);
+      }
+  }
+
+  document.onkeyup = function(e) {
+      if (keys[e.keyCode]) {
+          keys[e.keyCode] = false;
+          keys.length--;
+      }
+  }
+
+  FillGrass();
+  Create_Character();
+  Create_Enemy();
+  Enemy_move(Enemy_1);
+  Score_get();
+</script>
